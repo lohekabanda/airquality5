@@ -1,0 +1,65 @@
+import pandas as pd
+import numpy as np
+df=pd.read_csv('airquality_data.csv',encoding='cp1252')
+df.head()
+df.columns
+df.info()
+df.shape
+df.drop_duplicates()
+df.info()
+
+df['so2'] = df['so2'].astype('float32')
+df['no2'] = df['no2'].astype('float32')
+df['rspm'] = df['rspm'].astype('float32')
+df['spm'] = df['spm'].astype('float32')
+df.info()
+
+df.isna().sum()
+
+per=df.isna().sum() * 100/len(df)
+per.sort_values(ascending=False)
+
+df=df.drop(['stn_code', 'agency','sampling_date','location_monitoring_station','pm2_5'],axis=1)
+df.head()
+df.columns
+df.info()
+col_var = ['state', 'location', 'type','date']
+col_num = ['so2','no2','rspm','spm']
+​
+
+
+for col in df.columns:
+    if df[col].dtype == 'object':
+        df[col]=df[col].fillna(df[col].mode()[0])
+    else:
+        df[col]=df[col].fillna(df[col].mean())
+
+df.isna().sum()
+df
+
+subset1=df[['state','type']]
+subset2=df[['so2','no2']]
+merge=pd.concat([subset1,subset2],axis=1)
+merge
+
+col_name = ['so2','no2','rspm','spm']
+def remove_outliers(col):
+    q1=col.quantile(0.25)
+    q3=col.quantile(0.75)
+    iqr=q3-q1
+    threshold=1.5*iqr
+    outiler_mask =(col<q1-threshold) | (col >q3+threshold)
+    return col[~outiler_mask]
+
+for col in col_name:
+    df[col]=remove_outliers(df[col])
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(10,6))
+for col in col_name:
+    sns.boxplot(data=df[col])
+    plt.title(col)
+    plt.show()
